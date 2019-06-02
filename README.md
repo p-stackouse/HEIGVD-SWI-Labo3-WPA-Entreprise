@@ -35,32 +35,107 @@ Dans cette première partie, vous allez capturer une connexion WPA Entreprise au
 - Lancer une capture avec Wireshark
 - Etablir une connexion depuis un poste de travail (PC), un smartphone ou une tablette. Attention, il est important que la connexion se fasse à 2.4 GHz pour pouvoir sniffer avec les interfaces Alfa.
 - Comparer votre capture au processus d’authentification expliqué en classe (n’oubliez pas les captures !). En particulier, identifier les étapes suivantes :
+	
 	- Requête et réponse d’authentification système ouvert
+	
+	  Voici respectivement les requête et réponse d'authentification en système ouvert: 
+	
+	  ![01_openAuthRequest](./img/01_openAuthRequest.png)
+	
+	  ![01_openAuthRequest](./img/02_openAuthResponse.png)
+	
+	  On peut constater, notamment sur la seconde, que le nom du système client (dejvid.muaremi) est transmis à l'AP.
  	- Requête et réponse d’association
 	- Sélection de la méthode d’authentification
+	
+	  ![03_requestMethod](./img/03_requestMethod.png)
+	
+	  On remarque ici que la méthode d'authentification proposée par l'AP est EAP-PEAP. Il est à noter qu'elle a été acceptée par le client. Le paquet "hello" du client prend en compte cette méthode d'authentification:
+	
+	  ![04_helloClientPEAP](./img/04_helloClientPEAP.png)
+	
 	- Phase d’initiation. Arrivez-vous à voir l’identité du client ?
+	
+	  Oui. Elle est visible ici (dejvid.muaremi):
+	
+	  ![01_openAuthRequest](./img/02_openAuthResponse.png)
+	
+	  
+	
 	- Phase hello :
 		- Version TLS
+		
+		  On peut constater que, lors de la phase hello, la version de TLS utilisée est la 1.2. La capture suivante démontre ce cas de figure:
+		
+		  ![05_helloClientTLSversion](./img/05_helloClientTLSversion.png)
+		
 		- Suites cryptographiques et méthodes de compression proposées par le client et acceptées par l’AP
+		
+		  Voici la liste des ciphersuites proposées par le client (il y en a 22), listées dans le paquet "Hello" du client:
+		
+		  ![06_clientHelloCiphersuites](./img/06_clientHelloCiphersuites.png)
+		
+		  Concernant les méthodes de compression proposées par le client, il y en a aucune qui n'est proposée:
+		
+		  ![07_clientHelloCompressionMethod](./img/07_clientHelloCompressionMethod.png)
+		
+		  Du point de vue de la réponse de l'AP, cette dernière choisit la ciphersuite suivante:
+		
+		  ![08_serverHelloCiphersuite](./img/08_serverHelloCiphersuite.png)
+		
+		  Il est à noter que la réponse du serveur contient bien l'information, concernant le fait qu'aucun algorithme de compression n'est choisi ici.
+		
 		- Nonces
+		
+		  Voici les nonces échangés, respectivement du côté client et du côté serveur:
+		
+		  ![10_clientHelloNonce](./img/10_clientHelloNonce.png)
+		
+		  ![11_serverHelloNonce](./img/11_serverHelloNonce.png)
+		
 		- Session ID
+		
+		  On remarque ici qu'aucun sessionID n'est trouvé dans le paquet (Session ID Length = 0):
+		
+		  ![12_serverHelloSessionID](./img/12_serverHelloSessionID.png)
+		
 	- Phase de transmission de certificats
+	
+	  La phase transmission des certificat se fait en même temps que la réponse "Hello" de l'AP au client (capture ci-dessous).
+	
 	 	- Certificat serveur
-		- Change cipher spec
+		
+		Voici le certificat transmis par l'AP au client:
+		
+		![13_serverCertificateEx](./img/13_serverCertificateEx.png)
+		
+		  - Change cipher spec
+		
+		![14_changeCipherSpec](./img/14_changeCipherSpec.png)
+		
 	- Authentification interne et transmission de la clé WPA (échange chiffré, vu comme « Application data »)
+	
+	  On constate ici une série de paquets échangés et chiffrés. La transmission de clé se réalise dans l'un d'eux.
+	
+	  ![15_applicationData](./img/15_applicationData.png)
+	
 	- 4-way hadshake
+	
+	  Voici le 4 way handshake. Cette image provient d'autre capture que celle développée plus haut.
+	
+	  ![16_4WayHandshake](./img/16_4WayHandshake.png)
 
 ### Répondez aux questions suivantes :
- 
+
 > **_Question :_** Quelle ou quelles méthode(s) d’authentification est/sont proposé(s) au client ?
 > 
-> **_Réponse :_** 
+> **_Réponse :_**  Ici la méthode d'authentification proposée au client est EAP-PEAP
 
 ---
 
 > **_Question:_** Quelle méthode d’authentification est utilisée ?
 > 
-> **_Réponse:_** 
+> **_Réponse:_**  La méthode d'authentification utilisée est EAP-PEAP. Elle a été acceptée par le client.
 
 ---
 
@@ -68,12 +143,11 @@ Dans cette première partie, vous allez capturer une connexion WPA Entreprise au
 > 
 > - Le serveur envoie-t-il un certificat au client ? Pourquoi oui ou non ?
 > 
-> **_Réponse:_**
+> **_Réponse:_** Oui. Ce certificat sert à authentifier l'AP auprès du client.
 > 
 > - b.	Le client envoie-t-il un certificat au serveur ? Pourquoi oui ou non ?
 > 
-> **_Réponse:_**
-> 
+> **_Réponse:_** Non, le client n'envoie aucun certificat au serveur dans ce cas précis de la connexion à l'AP de l'HEIG-VD. En effet, le client réalise une simple authentification MS-CHAPV2.
 
 ---
 
